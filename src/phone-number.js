@@ -9,7 +9,7 @@
  */
 /* global angular */
 angular.module('cwill747.phonenumber', [])
-  .directive('phoneNumber', ['$log', '$window', function($log, $window) {
+  .directive('phoneNumber', ['$log', '$window', function ($log, $window) {
     function clearValue(value) {
       if (!value) {
         return value;
@@ -21,11 +21,14 @@ angular.module('cwill747.phonenumber', [])
       var phoneMask = value;
       try {
         phoneMask = $window.phoneUtils.formatAsTyped(value, region);
-      }
-      catch (err) {
+      } catch (err) {
         $log.debug(err);
       }
       return phoneMask;
+    }
+
+    function isMobile() {
+      return navigator.userAgent.match(/Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|IEMobile/i);
     }
 
     return {
@@ -36,12 +39,12 @@ angular.module('cwill747.phonenumber', [])
         nonFormatted: '=?'
       },
       controllerAs: '',
-      controller: function() {
+      controller: function () {
         this.countryCode = this.countryCode || 'us';
       },
-      link: function(scope, element, attrs, ctrl) {
+      link: function (scope, element, attrs, ctrl) {
         var el = element[0];
-        scope.$watch('countryCode', function() {
+        scope.$watch('countryCode', function () {
           ctrl.$modelValue = ctrl.$viewValue + ' ';
         });
 
@@ -51,8 +54,7 @@ angular.module('cwill747.phonenumber', [])
           var formattedValue = '';
           if (cleanValue && cleanValue.length > 1) {
             formattedValue = applyPhoneMask(cleanValue, scope.countryCode);
-          }
-          else {
+          } else {
             formattedValue = cleanValue;
           }
           return formattedValue.trim();
@@ -90,7 +92,12 @@ angular.module('cwill747.phonenumber', [])
           ctrl.$setViewValue(formattedValue);
           ctrl.$render();
 
-          el.setSelectionRange(start, end);
+          if (isMobile()) {
+            end = start = formattedValue.length;
+          }
+          window.setTimeout(function () {
+            el.setSelectionRange(start, end);
+          }, 0);
           //return cleaned;
           return clearValue(formattedValue);
         }
@@ -99,8 +106,7 @@ angular.module('cwill747.phonenumber', [])
           var isValidForRegion = false;
           try {
             isValidForRegion = $window.phoneUtils.isValidNumberForRegion(value, scope.countryCode);
-          }
-          catch (err) {
+          } catch (err) {
             $log.debug(err);
           }
           var valid = ctrl.$isEmpty(value) || isValidForRegion;
